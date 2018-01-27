@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>TR Calc</title>
+  </head>
+  <body>
+    <div>
+      A <input id="inputA" name="inputA" type="text" />
+    </div>
+    <div>
+      B <input id="inputB" name="inputB" type="text" />
+    </div>
+    <div>
+      <button class="operand">+</button> <button class="operand">-</button> <button class="operand">x</button> <button class="operand">/</button> <button class="operand">Pow</button>
+    </div>
+    <div>
+      result: <span id="result"></span>
+    </div>
+    <div>
+      <button id="savebtn" disabled>Save</button> <button id="loadbtn">Load</button>
+    </div>
+
+    <script>
+      // You can also require other files to run in this process
+      require('./renderer.js')
+    </script>
+  </body>
+</html>
