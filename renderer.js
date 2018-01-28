@@ -4,6 +4,7 @@
 const {dialog} = require('electron').remote;
 const fs = require('fs');
 const http = require('http');
+const config = require('./app.config.json');
 
 const buttons = document.querySelectorAll('.operand');
 const saveBtn = document.querySelector('#savebtn');
@@ -11,7 +12,7 @@ const loadBtn = document.querySelector('#loadbtn');
 const textboxA = document.querySelector('#inputA');
 const textboxB = document.querySelector('#inputB');
 const cloudChk = document.querySelector('#cloudSave');
-const cloudId = 'pai';
+const cloudId = config.id || 'TestId';
 let isCloud = false;
 
 let operand = '';
