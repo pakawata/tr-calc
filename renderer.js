@@ -3,12 +3,17 @@
 // All of the Node.js APIs are available in this process.
 const {dialog} = require('electron').remote;
 const fs = require('fs');
+const http = require('http');
 
 const buttons = document.querySelectorAll('.operand');
 const saveBtn = document.querySelector('#savebtn');
 const loadBtn = document.querySelector('#loadbtn');
 const textboxA = document.querySelector('#inputA');
 const textboxB = document.querySelector('#inputB');
+const cloudChk = document.querySelector('#cloudSave');
+const cloudId = 'pai';
+let isCloud = false;
+
 let operand = '';
 
 function onOperandSelected(e) {
@@ -68,12 +73,9 @@ function save(fileName) {
     fs.writeFileSync(fileName, JSON.stringify(data));  
 }
 
-function load(fileName) {
-    if (!fileName || fileName.length <= 0) return;
-
+function load(data) {
     resetResult();
-    const content = fs.readFileSync(fileName[0], 'utf8');
-    const data = JSON.parse(content);
+    
     textboxA.value = data.inputA;
     textboxB.value = data.inputB;
     buttons.forEach(button => {
@@ -91,11 +93,58 @@ function init() {
     });
     
     saveBtn.addEventListener('click', () => {
-        dialog.showSaveDialog({filters: [{ name: 'json', extensions: ['json'] }]}, save);
+        if (isCloud) {
+            const params = JSON.stringify({
+                id: cloudId,
+                inputA: parseFloat(textboxA.value),
+                inputB: parseFloat(textboxB.value),
+                operand: operand
+            });
+            const options = {
+                hostname: 'node-express-env.fdrgcb7xp9.ap-southeast-1.elasticbeanstalk.com',
+                port: 80,
+                path: '/data',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+
+            const req = http.request(options, function(res) {
+                res.setEncoding('utf8');
+                res.on('data', function (chunk) {
+                    console.log(chunk)
+                });
+            });
+
+            console.log(params);
+
+            req.write(params);
+            req.end();
+
+        }
+        else {
+            dialog.showSaveDialog({filters: [{ name: 'json', extensions: ['json'] }]}, save);           
+        }
     });
 
     loadBtn.addEventListener('click', () => {
-        dialog.showOpenDialog({filters: [{ name: 'json', extensions: ['json'] }]}, load);
+        if (isCloud) {
+            http.get('http://node-express-env.fdrgcb7xp9.ap-southeast-1.elasticbeanstalk.com/data/' + cloudId, (res) => {
+            res.setEncoding('utf8');    
+            res.on('data', function (data) {
+                    const parsed = JSON.parse(data);
+                    load(parsed);
+                });
+            });
+        } else {
+            dialog.showOpenDialog({filters: [{ name: 'json', extensions: ['json'] }]}, (fileName) => {
+                if (!fileName || fileName.length <= 0) return;
+                const content = fs.readFileSync(fileName[0], 'utf8');
+                const data = JSON.parse(content);
+                load(data);
+            });
+        }
     });
 
     textboxA.addEventListener('keyup', () => {
@@ -107,6 +156,10 @@ function init() {
         saveBtn.setAttribute('disabled', 'disabled');
         resetResult();
     });
+
+    cloudChk.addEventListener('change', (e) => {
+        isCloud = e.currentTarget.checked;
+    })
 }
 
 init();
